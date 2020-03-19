@@ -1,0 +1,149 @@
+<html>
+  <link rel="stylesheet" href="./style.css">
+  <canvas id='game-canvas' width='800' height="600"></canvas>
+  <script type="text/javascript">
+
+    var canvas;
+    var canvasContext;
+    var ballX = 50;
+    var ballY = 50;
+    var ballXspeed = 15;
+    var ballYspeed = 4;
+    var paddleLeft =  250;
+    var paddleRight = 300;
+    var playerScore  = 0;
+    var computerScore = 0;
+    var gameOver = false;
+
+    const PADDLE_WIDTH = 10;
+    const PADDLE_HEIGHT = 70;
+    const WINNING_NUMBER = 2;
+
+    function paddlePosition(evt) {
+      var rect = canvas.getBoundingClientRect();
+      var root = document.documentElement;
+      var mouseX = evt.clientX - rect.left - root.scrollLeft;
+      var mouseY = evt.clientY - rect.top - root.scrollTop;
+      return {
+        x:mouseX,
+        y: mouseY
+      };
+    }
+
+    function restartGame(e) {
+      if (gameOver)  {
+        computerScore = 0;
+        playerScore = 0;
+        gameOver =  false;
+      }
+    }
+
+    window.onload = function() {
+      canvas = document.getElementById('game-canvas');
+      canvasContext = canvas.getContext('2d');
+      setInterval( function() {
+        drawStuff();
+        moveStuff();
+      }, 50);   // 2nd interval is time, 1000 is 1 sec
+
+      canvas.addEventListener('mousemove',  function(evt) {
+        var mousePos = paddlePosition(evt);
+        paddleLeft = (mousePos.y-(PADDLE_HEIGHT/2));
+      })
+
+      canvas.addEventListener('mousedown', restartGame);
+
+
+    }
+
+    function computerTurn() {
+      if ((paddleRight+(PADDLE_HEIGHT/2)) > (ballY +25)) {
+        paddleRight -= 7;
+      } else if ((paddleRight+(PADDLE_HEIGHT/2)) < (ballY -25)) {
+        paddleRight += 7;
+      }
+    }
+
+    function moveStuff() {
+      if  (gameOver) {
+        return;
+      }
+
+      computerTurn();
+      ballX += ballXspeed;
+      ballY += ballYspeed;
+      if (ballX < 30) {
+        if (ballY >= paddleLeft && ballY <= paddleLeft +70) {
+          ballXspeed = -ballXspeed;
+          var ball2pad = ballY -(paddleLeft + PADDLE_HEIGHT/2);
+          ballYspeed = ball2pad*0.35
+
+        } else {
+          computerScore += 1
+          ballReset();
+        }
+      }
+
+      if (ballX > canvas.width-30) {
+        if (ballY > paddleRight && ballY < paddleRight +70){
+          ballXspeed =- ballXspeed;
+          //next  steps make the bounce back steeper on edge of paddle and flatter in center
+          var ball2pad = ballY -(paddleRight + PADDLE_HEIGHT/2);
+          ballYspeed = ball2pad*0.35
+        } else {
+          playerScore +=1;
+          ballReset();
+        }
+      }
+
+
+      if (ballY > canvas.height | ballY < 0) {
+        ballYspeed = -ballYspeed;
+      }
+    }
+
+    function drawStuff() {
+      //  background
+      canvasContext.fillStyle = 'black';
+      canvasContext.fillRect(0,0,canvas.width, canvas.height);
+
+      if (gameOver) {
+        canvasContext.fillStyle = 'white';
+        canvasContext.fillText("Click to try again", 400, 100);
+      }
+
+      // ball
+      canvasContext.fillStyle = 'white';
+      canvasContext.beginPath();
+      canvasContext.arc(ballX, ballY, 10, 0, Math.PI*2, true); //center, y, radius, angles, clockwise
+      canvasContext.fill ();
+      //left paddle
+      canvasContext.fillStyle = 'white';
+      canvasContext.fillRect(10,paddleLeft,PADDLE_WIDTH,PADDLE_HEIGHT);
+      //right paddle
+      canvasContext.fillStyle = 'white';
+      canvasContext.fillRect(canvas.width-20,paddleRight,PADDLE_WIDTH,PADDLE_HEIGHT);
+
+      canvasContext.fillText(playerScore, 100, 100);
+      canvasContext.fillText(computerScore, 700, 100);
+    }
+
+    function ballReset() {
+      if (playerScore == WINNING_NUMBER) {
+        gameOver = true;
+      } else if (computerScore == WINNING_NUMBER){
+        gameOver = true;
+      }
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballXspeed = -ballXspeed
+    }
+
+
+
+
+
+
+
+  </script>
+</html>
